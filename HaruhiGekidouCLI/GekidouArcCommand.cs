@@ -1,15 +1,16 @@
 using System.Text;
 using HaruhiGekidouLib;
+using HaruhiGekidouLib.Archive;
 using Mono.Options;
 
 namespace HaruhiGekidouCLI;
 
-public class ScriptArcCommand : Command
+public class GekidouArcCommand : Command
 {
-    private string _input, _output;
+    private string _input = string.Empty, _output = string.Empty;
     private bool _extract, _pack, _dumpCsv;
     
-    public ScriptArcCommand() : base("script-arc", "Various functions to deal with script archives")
+    public GekidouArcCommand() : base("gekidou-arc", "Various functions to deal with script archives")
     {
         Options = new()
         {
@@ -27,7 +28,7 @@ public class ScriptArcCommand : Command
 
         if (_extract)
         {
-            ScriptArc arc = new(File.ReadAllBytes(_input));
+            GekidouArc arc = new(File.ReadAllBytes(_input));
             Directory.CreateDirectory(_output);
             string currentDir = _output;
             int currentDepth = 0;
@@ -42,7 +43,7 @@ public class ScriptArcCommand : Command
                     
                     while (currentDepth > 0 && currentDepth >= entry.OffsetOrDepth)
                     {
-                        currentDir = Path.GetDirectoryName(currentDir);
+                        currentDir = Path.GetDirectoryName(currentDir) ?? string.Empty;
                         currentDepth >>= 1;
                     }
                     currentDir = Path.Combine(currentDir, entry.Name);
@@ -61,7 +62,7 @@ public class ScriptArcCommand : Command
         }
         else if (_dumpCsv)
         {
-            ScriptArc arc = new(File.ReadAllBytes(_input));
+            GekidouArc arc = new(File.ReadAllBytes(_input));
             StringBuilder sb = new();
             sb.AppendLine($"{nameof(ScriptArcEntry.Name)},{nameof(ScriptArcEntry.IsDirectory)},{nameof(ScriptArcEntry.NameOffset)},{nameof(ScriptArcEntry.OffsetOrDepth)},{nameof(ScriptArcEntry.LengthOrLastItemIdx)}");
             foreach (ScriptArcEntry entry in arc.Entries)

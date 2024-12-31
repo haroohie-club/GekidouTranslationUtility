@@ -1,14 +1,14 @@
 using HaruhiGekidouLib.Util;
 
-namespace HaruhiGekidouLib;
+namespace HaruhiGekidouLib.Archive;
 
-public class ScriptArc
+public class GekidouArc
 {
     public const uint MAGIC = 0x55AA382D;
 
     public List<ScriptArcEntry> Entries { get; set; } = [];
 
-    public ScriptArc(byte[] data)
+    public GekidouArc(byte[] data)
     {
         int fileTableOffset = IO.ReadInt(data, 0x04);
 
