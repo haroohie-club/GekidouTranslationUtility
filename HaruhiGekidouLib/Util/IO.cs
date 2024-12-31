@@ -25,6 +25,35 @@ public static class IO
         return BinaryPrimitives.ReadUInt32BigEndian(data.AsSpan(offset..(offset + 4)));
     }
 
+    public static byte[] GetShortBytes(short value)
+    {
+        var bytes = new byte[2];
+        BinaryPrimitives.WriteInt16BigEndian(bytes, value);
+        return bytes;
+    }
+
+    public static byte[] GetUShortBytes(ushort value)
+    {
+        var bytes = new byte[2];
+        BinaryPrimitives.WriteUInt16BigEndian(bytes, value);
+        return bytes;
+    }
+    
+    public static byte[] GetIntBytes(int value)
+    {
+        var bytes = new byte[4];
+        BinaryPrimitives.WriteInt32BigEndian(bytes, value);
+        return bytes;
+    }
+    
+    public static byte[] GetUIntBytes(uint value)
+    {
+        var bytes = new byte[4];
+        BinaryPrimitives.WriteUInt32BigEndian(bytes, value);
+        return bytes;
+    }
+
+
     public static string ReadShiftJisString(byte[] data, int offset)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

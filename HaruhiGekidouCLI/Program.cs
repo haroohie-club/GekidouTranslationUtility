@@ -8,7 +8,7 @@ class Program
     {
         CommandSet commands = new("HaruhiGekidouCLI")
         {
-            new GekidouArcCommand(),
+            new ArcCommand(),
         };
 
         commands.Run(args);

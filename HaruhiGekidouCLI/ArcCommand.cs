@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using HaruhiGekidouLib;
 using HaruhiGekidouLib.Archive;
@@ -5,12 +6,12 @@ using Mono.Options;
 
 namespace HaruhiGekidouCLI;
 
-public class GekidouArcCommand : Command
+public class ArcCommand : Command
 {
     private string _input = string.Empty, _output = string.Empty;
     private bool _extract, _pack, _dumpCsv;
     
-    public GekidouArcCommand() : base("gekidou-arc", "Various functions to deal with script archives")
+    public ArcCommand() : base("arc", "Various functions to deal with script archives")
     {
         Options = new()
         {
@@ -58,16 +59,35 @@ public class GekidouArcCommand : Command
         }
         else if (_pack)
         {
-            
+            GekidouArc arc = new();
+            string[] directories = Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray();
+            arc.Entries.Add(new(string.Empty, true, depth: 0));
+            foreach (string dir in directories)
+            {
+                int actualDepth = Path.GetRelativePath(_input, dir).Split(Path.DirectorySeparatorChar).Length;
+                int depth = 0xFF >> (9 - actualDepth);
+                int lastItemIdx = 1 + actualDepth + Directory.GetFileSystemEntries(dir, "*", SearchOption.AllDirectories).Length
+                    + (arc.Entries.LastOrDefault(e => e.OffsetOrDepth == depth)?.LengthOrLastItemIdx ?? 0);
+                
+                arc.Entries.Add(new(Path.GetFileName(dir), true, depth, lastItemIdx));
+
+                string[] files = Directory.GetFiles(dir);
+                foreach (string file in files)
+                {
+                    arc.Entries.Add(new(Path.GetFileName(file), false, data: File.ReadAllBytes(file)));
+                }
+            }
+
+            File.WriteAllBytes(_output, arc.GetBytes());
         }
         else if (_dumpCsv)
         {
             GekidouArc arc = new(File.ReadAllBytes(_input));
             StringBuilder sb = new();
-            sb.AppendLine($"{nameof(ScriptArcEntry.Name)},{nameof(ScriptArcEntry.IsDirectory)},{nameof(ScriptArcEntry.NameOffset)},{nameof(ScriptArcEntry.OffsetOrDepth)},{nameof(ScriptArcEntry.LengthOrLastItemIdx)}");
+            sb.AppendLine($"{nameof(ScriptArcEntry.Name)},{nameof(ScriptArcEntry.IsDirectory)},{nameof(ScriptArcEntry.OffsetOrDepth)},{nameof(ScriptArcEntry.LengthOrLastItemIdx)}");
             foreach (ScriptArcEntry entry in arc.Entries)
             {
-                sb.AppendLine($"{entry.Name},{entry.IsDirectory},{entry.NameOffset},{entry.OffsetOrDepth},{entry.LengthOrLastItemIdx}");
+                sb.AppendLine($"{entry.Name},{entry.IsDirectory},{entry.OffsetOrDepth},{entry.LengthOrLastItemIdx}");
             }
             File.WriteAllText(_output, sb.ToString());
         }
