@@ -2,6 +2,7 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using HaruhiGekidouLib;
 using HaruhiGekidouLib.Archive;
+using HaruhiGekidouLib.Util;
 using Mono.Options;
 
 namespace HaruhiGekidouCLI;
@@ -29,7 +30,13 @@ public class ArcCommand : Command
 
         if (_extract)
         {
-            GekidouArc arc = new(File.ReadAllBytes(_input));
+            byte[] arcBytes = File.ReadAllBytes(_input);
+            if (_input.EndsWith(".lz77"))
+            {
+                arcBytes = Compression.Decompress(arcBytes);
+            }
+            
+            GekidouArc arc = new(arcBytes);
             Directory.CreateDirectory(_output);
             string currentDir = _output;
             int currentDepth = 0;
@@ -78,7 +85,13 @@ public class ArcCommand : Command
                 }
             }
 
-            File.WriteAllBytes(_output, arc.GetBytes());
+            byte[] arcBytes = arc.GetBytes();
+            if (_output.EndsWith(".lz77"))
+            {
+                arcBytes = Compression.Compress(arcBytes);
+            }
+            
+            File.WriteAllBytes(_output, arcBytes);
         }
         else if (_dumpCsv)
         {
