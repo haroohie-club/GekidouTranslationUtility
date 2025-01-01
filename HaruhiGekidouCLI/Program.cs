@@ -9,6 +9,7 @@ class Program
         CommandSet commands = new("HaruhiGekidouCLI")
         {
             new ArcCommand(),
+            new AdvScriptCommand(),
         };
 
         commands.Run(args);

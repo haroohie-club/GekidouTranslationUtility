@@ -33,7 +33,7 @@ public class ArcCommand : Command
             Directory.CreateDirectory(_output);
             string currentDir = _output;
             int currentDepth = 0;
-            foreach (ScriptArcEntry entry in arc.Entries)
+            foreach (GekidouArcEntry entry in arc.Entries)
             {
                 if (entry.IsDirectory)
                 {
@@ -84,8 +84,8 @@ public class ArcCommand : Command
         {
             GekidouArc arc = new(File.ReadAllBytes(_input));
             StringBuilder sb = new();
-            sb.AppendLine($"{nameof(ScriptArcEntry.Name)},{nameof(ScriptArcEntry.IsDirectory)},{nameof(ScriptArcEntry.OffsetOrDepth)},{nameof(ScriptArcEntry.LengthOrLastItemIdx)}");
-            foreach (ScriptArcEntry entry in arc.Entries)
+            sb.AppendLine($"{nameof(GekidouArcEntry.Name)},{nameof(GekidouArcEntry.IsDirectory)},{nameof(GekidouArcEntry.OffsetOrDepth)},{nameof(GekidouArcEntry.LengthOrLastItemIdx)}");
+            foreach (GekidouArcEntry entry in arc.Entries)
             {
                 sb.AppendLine($"{entry.Name},{entry.IsDirectory},{entry.OffsetOrDepth},{entry.LengthOrLastItemIdx}");
             }

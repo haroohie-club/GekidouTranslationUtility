@@ -59,6 +59,18 @@ public static class IO
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         return Encoding.GetEncoding("Shift-JIS").GetString(data.Skip(offset).TakeWhile(b => b != 0x00).ToArray());
     }
+    
+    public static byte[] GetShiftJisBytes(this string str)
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        return Encoding.GetEncoding("Shift-JIS").GetBytes(str);
+    }
+
+
+    public static int GetShiftJisLength(this string str)
+    {
+        return Encoding.GetEncoding("Shift-JIS").GetBytes(str).Length;
+    }
 
     public static string ReadAsciiString(byte[] data, int offset)
     {

@@ -7,7 +7,7 @@ public class GekidouArc
 {
     public const uint MAGIC = 0x55AA382D;
 
-    public List<ScriptArcEntry> Entries { get; set; } = [];
+    public List<GekidouArcEntry> Entries { get; set; } = [];
 
     public GekidouArc()
     {
@@ -51,7 +51,7 @@ public class GekidouArc
         bytes.AddRange(IO.GetIntBytes(Entries.Count));
         
         short nameOffset = 1;
-        foreach (ScriptArcEntry entry in Entries.Skip(1))
+        foreach (GekidouArcEntry entry in Entries.Skip(1))
         {
             bytes.AddRange(IO.GetShortBytes((short)(entry.IsDirectory ? 0x100 : 0)));
             bytes.AddRange(IO.GetShortBytes(nameOffset));
@@ -70,7 +70,7 @@ public class GekidouArc
             }
         }
 
-        foreach (ScriptArcEntry entry in Entries)
+        foreach (GekidouArcEntry entry in Entries)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes(entry.Name));
             bytes.Add(0);
@@ -83,7 +83,7 @@ public class GekidouArc
     }
 }
 
-public class ScriptArcEntry
+public class GekidouArcEntry
 {
     public string Name { get; set; }
     public bool IsDirectory { get; set; }
@@ -92,7 +92,7 @@ public class ScriptArcEntry
     
     public byte[] Data { get; set; } = [];
 
-    public ScriptArcEntry(string name, bool isDirectory, int depth = 0, int lastItemIdx = 0, byte[]? data = null)
+    public GekidouArcEntry(string name, bool isDirectory, int depth = 0, int lastItemIdx = 0, byte[]? data = null)
     {
         Name = name;
         IsDirectory = isDirectory;
@@ -101,7 +101,7 @@ public class ScriptArcEntry
         Data = data ?? [];
     }
     
-    public ScriptArcEntry(byte[] data, int fileTableOffset, int idx, int nameTableOffset)
+    public GekidouArcEntry(byte[] data, int fileTableOffset, int idx, int nameTableOffset)
     {
         int entryOffset = fileTableOffset + 0x0C * idx;
         IsDirectory = IO.ReadShort(data, entryOffset) == 256;
