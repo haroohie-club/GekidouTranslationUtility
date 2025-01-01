@@ -78,7 +78,7 @@ public partial class AdvPartScript
 
     public string ExportDialogueJson()
     {
-        List<List<string>> lines = [];
+        Dictionary<string, string> lines = [];
 
         for (int i = 0; i < ScriptBlocks.Count; i++)
         {
@@ -103,11 +103,11 @@ public partial class AdvPartScript
                     string key = $"{Name} - BLOCK{i:D2} - COMMAND{j:D3}";
                     if (moreRecent14)
                     {
-                        lines.Add([$"{key} - Monologue", ScriptBlocks[i].Commands[j].Dialogue!]);
+                        lines.Add($"{key} - Monologue", ScriptBlocks[i].Commands[j].Dialogue!);
                     }
                     else
                     {
-                        lines.Add([$"{key} - {mostRecentSpeaker}", ScriptBlocks[i].Commands[j].Dialogue!]);
+                        lines.Add($"{key} - {mostRecentSpeaker}", ScriptBlocks[i].Commands[j].Dialogue!);
                     }
                 }
             }
@@ -118,14 +118,14 @@ public partial class AdvPartScript
 
     public void ImportDialogueJson(string json)
     {
-        var lines = JsonSerializer.Deserialize<List<List<string>>>(json)!;
-        foreach (List<string> line in lines)
+        var lines = JsonSerializer.Deserialize<Dictionary<string, string>>(json)!;
+        foreach (string key in lines.Keys)
         {
-            Match match = BlockCommandRegex().Match(line[0]);
+            Match match = BlockCommandRegex().Match(key);
             int blockIdx = int.Parse(match.Groups["blockIdx"].Value);
             int commandIdx = int.Parse(match.Groups["commandIdx"].Value);
 
-            ScriptBlocks[blockIdx].Commands[commandIdx].Dialogue = line[1];
+            ScriptBlocks[blockIdx].Commands[commandIdx].Dialogue = lines[key];
         }
     }
 
@@ -215,4 +215,6 @@ public enum Speaker
     Nagato = 4,
     Kyon = 5,
     Koizumi = 6,
+    Tsuruya = 7,
+    Cop = 11,
 }

@@ -28,6 +28,11 @@ public class ArcCommand : Command
     {
         Options.Parse(arguments);
 
+        if (!Directory.Exists(Path.GetDirectoryName(_output)))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_output)!);
+        }
+
         if (_extract)
         {
             byte[] arcBytes = File.ReadAllBytes(_input);
