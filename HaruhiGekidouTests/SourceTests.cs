@@ -1,9 +1,12 @@
-﻿using NUnit.Framework;
+﻿using System.IO;
+using System.Threading.Tasks;
+using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using HaruhiGekidouLib;
 using HaruhiGekidouLib.Archive;
 using HaruhiGekidouLib.Util;
 using HaruhiGekidouLib.Script;
+
 
 namespace HaruhiGekidouTests.Tests
 {
@@ -60,7 +63,7 @@ namespace HaruhiGekidouTests.Tests
             File.WriteAllBytes("./output/ScriptArc/" + _arcFileName + ".arc", newBytes);
             
             //compare the two
-            ClassicAssert.AreEqual(arcBytes, newBytes);
+            Assert.That(newBytes, Is.EqualTo(arcBytes));
 
         }
         
