@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Text;
 using HaruhiGekidouLib.Util;
 
@@ -8,6 +9,8 @@ public class GekidouArc
     public const uint MAGIC = 0x55AA382D;
 
     public List<GekidouArcEntry> Entries { get; set; } = [];
+    
+    public List<GekidouArcEntry> HeaderOrderedEntries { get; set; } = [];
 
     public GekidouArc()
     {
@@ -34,7 +37,7 @@ public class GekidouArc
     public byte[] GetBytes()
     {
         List<byte> bytes = [];
-        List<byte> data = [];
+        SortedDictionary<int,byte[]> data = [];
         int fileTableLength = Entries.Count * 0x0C + Entries.Sum(e => e.Name.Length + 1);
         //fileTableLength += (fileTableLength % 2 == 0 ? 0 : 1);    
         int firstFileOffset = 0x20 + fileTableLength + (0x20 - fileTableLength % 0x20);
@@ -51,6 +54,8 @@ public class GekidouArc
         bytes.AddRange(IO.GetIntBytes(Entries.Count));
         
         short nameOffset = 1;
+        
+        
         foreach (GekidouArcEntry entry in Entries.Skip(1))
         {
             bytes.AddRange(IO.GetShortBytes((short)(entry.IsDirectory ? 0x100 : 0)));   //1 if its a directory, 0 if not
@@ -63,15 +68,26 @@ public class GekidouArc
             }
             else
             {
-                bytes.AddRange(IO.GetIntBytes(entry.OffsetOrDepth));
+                int fileOffset;     //file offset is stored in the class, but is cleared when serialized
+                if (entry.OffsetOrDepth != 0)
+                {
+                    fileOffset = entry.OffsetOrDepth;
+                }
+                else
+                {
+                    fileOffset = firstFileOffset + data.Count;
+                }
+                
+                bytes.AddRange(IO.GetIntBytes(fileOffset));    //set the offset value
+                
                 bytes.AddRange(IO.GetIntBytes(entry.Data.Length)); //length of entry
-                data.AddRange(entry.Data);  //store the entry's data for later
-                data.AddRange(new byte[0x20 - data.Count % 0x20 ]); //pads to the next 4 bytes?
-                //List<byte> entryData = [];
-                //entryData.AddRange(entry.Data);
-                //entryData.AddRange(new byte[0x20 - data.Count % 0x20 ]);
-                //data.InsertRange(entry.OffsetOrDepth,entryData);
+                
+                data.Add(fileOffset, entry.Data);
+                
+                
             }
+            Console.WriteLine(entry.Name + ": " + entry.OffsetOrDepth.ToString());
+            
         }
         
         foreach (GekidouArcEntry entry in Entries)
@@ -79,12 +95,19 @@ public class GekidouArc
             bytes.AddRange(Encoding.ASCII.GetBytes(entry.Name));    //add the name of the file
             bytes.Add(0);
         }
-        bytes.AddRange(new byte[0x20 - bytes.Count % 0x20]); //pads to the next 4 bytes?
+        bytes.AddRange(new byte[0x20 - bytes.Count % 0x20]); //pads to the next 32 bytes?
 
-        bytes.AddRange(data);
-        
-        bytes.RemoveRange(bytes.Count-0x20,0x20);   //remove 32 empty bytes - works for tutorial arcs
-        
+        int i = 0;
+        foreach (byte[] dataEntry in data.Values)
+        {
+            bytes.AddRange(dataEntry);
+            if (bytes.Count % 0x20 != 0 & data.Count-1 != i) //if bytes do not align, or if it's the last file entry in the list
+            {
+                bytes.AddRange(new byte[ 0x20 - bytes.Count % 0x20]); //pads to the next 32 bytes if needed
+            }
+
+            i++;
+        }
         return [.. bytes];
     }
 }
