@@ -72,18 +72,17 @@ public class ArcCommand : Command
         else if (_pack)
         {
             GekidouArc arc = new();
-            List<string> directories = [];
-            directories.Add(_input);
-            directories.AddRange(Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray());
+            string[] directories = 
+            [
+                _input,
+                .. Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order()
+            ];
             
             arc.Entries.Add(new(string.Empty, true, depth: 0));
             foreach (string dir in directories)
             {
-                int actualDepth = Path.GetRelativePath(_input, dir).Split(Path.DirectorySeparatorChar).Length;
-                if (!dir.Equals(_input)) //solves a bug where the depth is one off for everything but the root
-                {
-                    actualDepth++;
-                }
+                int actualDepth = dir.Equals(_input) ? 1 : Path.GetRelativePath(_input, dir).Split(Path.DirectorySeparatorChar).Length + 1;
+                
                 int depth = 0xFF >> (9 - actualDepth);
                 int lastItemIdx = 1 + actualDepth + Directory.GetFileSystemEntries(dir, "*", SearchOption.AllDirectories).Length
                                   + (arc.Entries.LastOrDefault(e => e.OffsetOrDepth == depth)?.LengthOrLastItemIdx ?? 0);   //potential issue here: tutorial_000 is incorrect at AdvPartScript
