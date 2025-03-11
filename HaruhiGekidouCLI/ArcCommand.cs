@@ -72,7 +72,10 @@ public class ArcCommand : Command
         else if (_pack)
         {
             GekidouArc arc = new();
-            string[] directories = Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray();
+            List<string> directories = [];
+            directories.AddRange(Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray());
+            directories.Add(_input);
+            
             arc.Entries.Add(new(string.Empty, true, depth: 0));
             foreach (string dir in directories)
             {
