@@ -10,8 +10,6 @@ public class GekidouArc
 
     public List<GekidouArcEntry> Entries { get; set; } = [];
     
-    public List<GekidouArcEntry> HeaderOrderedEntries { get; set; } = [];
-
     public GekidouArc()
     {
     }
@@ -68,7 +66,7 @@ public class GekidouArc
             }
             else
             {
-                int fileOffset;     //file offset is stored in the class, but is cleared when serialized
+                int fileOffset;     //file offset is stored in the class, but is lost when serialized. In that instance, it is assumed
                 if (entry.OffsetOrDepth != 0)
                 {
                     fileOffset = entry.OffsetOrDepth;
@@ -86,7 +84,6 @@ public class GekidouArc
                 
                 
             }
-            Console.WriteLine(entry.Name + ": " + entry.OffsetOrDepth.ToString());
             
         }
         
