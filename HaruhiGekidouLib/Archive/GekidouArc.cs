@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Text;
 using HaruhiGekidouLib.Util;
 
@@ -8,7 +9,7 @@ public class GekidouArc
     public const uint MAGIC = 0x55AA382D;
 
     public List<GekidouArcEntry> Entries { get; set; } = [];
-
+    
     public GekidouArc()
     {
     }
@@ -34,16 +35,17 @@ public class GekidouArc
     public byte[] GetBytes()
     {
         List<byte> bytes = [];
-        List<byte> data = [];
+        SortedDictionary<int,byte[]> data = [];
+        int totalDataLength = 0;
         int fileTableLength = Entries.Count * 0x0C + Entries.Sum(e => e.Name.Length + 1);
-        fileTableLength += (fileTableLength % 2 == 0 ? 0 : 1);
+        //fileTableLength += (fileTableLength % 2 == 0 ? 0 : 1);    
         int firstFileOffset = 0x20 + fileTableLength + (0x20 - fileTableLength % 0x20);
         
         bytes.AddRange(IO.GetUIntBytes(MAGIC));
-        bytes.AddRange(IO.GetIntBytes(0x20)); // file table offset
+        bytes.AddRange(IO.GetIntBytes(0x20)); 
         bytes.AddRange(IO.GetIntBytes(fileTableLength));
-        bytes.AddRange(IO.GetIntBytes(firstFileOffset));
-        bytes.AddRange(new byte[0x10]);
+        bytes.AddRange(IO.GetIntBytes(firstFileOffset));    
+        bytes.AddRange(new byte[0x10]); //16 blank bytes
 
         // Add first entry manually
         bytes.AddRange(IO.GetShortBytes(0x100));
@@ -51,9 +53,10 @@ public class GekidouArc
         bytes.AddRange(IO.GetIntBytes(Entries.Count));
         
         short nameOffset = 1;
+        
         foreach (GekidouArcEntry entry in Entries.Skip(1))
         {
-            bytes.AddRange(IO.GetShortBytes((short)(entry.IsDirectory ? 0x100 : 0)));
+            bytes.AddRange(IO.GetShortBytes((short)(entry.IsDirectory ? 0x100 : 0)));   //1 if its a directory, 0 if not
             bytes.AddRange(IO.GetShortBytes(nameOffset));
             nameOffset += (short)(entry.Name.Length + 1);
             if (entry.IsDirectory)
@@ -63,22 +66,49 @@ public class GekidouArc
             }
             else
             {
-                bytes.AddRange(IO.GetIntBytes(firstFileOffset + data.Count));
-                bytes.AddRange(IO.GetIntBytes(entry.Data.Length));
-                data.AddRange(entry.Data);
-                data.AddRange(new byte[0x20 - data.Count % 0x20]);
-            }
-        }
+                int fileOffset;     //file offset is stored in the class, but is lost when serialized. In that instance, it is assumed
+                if (entry.OffsetOrDepth != 0)
+                {
+                    fileOffset = entry.OffsetOrDepth;
+                }
+                else
+                {
+                    fileOffset = firstFileOffset + totalDataLength;
+                    totalDataLength += entry.Data.Length;
 
+                    if (totalDataLength % 0x20 != 0)
+                    {
+                        totalDataLength += 0x20 - totalDataLength % 0x20;
+                    }
+                }
+                
+                bytes.AddRange(IO.GetIntBytes(fileOffset));    //set the offset value
+                
+                bytes.AddRange(IO.GetIntBytes(entry.Data.Length)); //length of entry
+                
+                data.Add(fileOffset, entry.Data);
+                
+            }
+            
+        }
         foreach (GekidouArcEntry entry in Entries)
         {
-            bytes.AddRange(Encoding.ASCII.GetBytes(entry.Name));
+            bytes.AddRange(Encoding.ASCII.GetBytes(entry.Name));    //add the name of the file
             bytes.Add(0);
         }
-        bytes.AddRange(new byte[0x20 - bytes.Count % 0x20]);
+        bytes.AddRange(new byte[0x20 - bytes.Count % 0x20]); //pads to the next 32 bytes?
 
-        bytes.AddRange(data);
-        
+        int i = 0;
+        foreach (byte[] dataEntry in data.Values)
+        {
+            bytes.AddRange(dataEntry);
+            if (bytes.Count % 0x20 != 0 & data.Count-1 != i) //if bytes do not align, or if it's the last file entry in the list
+            {
+                bytes.AddRange(new byte[ 0x20 - bytes.Count % 0x20]); //pads to the next 32 bytes if needed
+            }
+
+            i++;
+        }
         return [.. bytes];
     }
 }

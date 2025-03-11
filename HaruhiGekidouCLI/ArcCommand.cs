@@ -72,17 +72,21 @@ public class ArcCommand : Command
         else if (_pack)
         {
             GekidouArc arc = new();
-            string[] directories = Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray();
+            string[] directories = 
+            [
+                _input,
+                .. Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order()
+            ];
+            
             arc.Entries.Add(new(string.Empty, true, depth: 0));
             foreach (string dir in directories)
             {
-                int actualDepth = Path.GetRelativePath(_input, dir).Split(Path.DirectorySeparatorChar).Length;
+                int actualDepth = dir.Equals(_input) ? 1 : Path.GetRelativePath(_input, dir).Split(Path.DirectorySeparatorChar).Length + 1;
+                
                 int depth = 0xFF >> (9 - actualDepth);
                 int lastItemIdx = 1 + actualDepth + Directory.GetFileSystemEntries(dir, "*", SearchOption.AllDirectories).Length
-                    + (arc.Entries.LastOrDefault(e => e.OffsetOrDepth == depth)?.LengthOrLastItemIdx ?? 0);
-                
+                                  + (arc.Entries.LastOrDefault(e => e.OffsetOrDepth == depth)?.LengthOrLastItemIdx ?? 0);   //potential issue here: tutorial_000 is incorrect at AdvPartScript
                 arc.Entries.Add(new(Path.GetFileName(dir), true, depth, lastItemIdx));
-
                 string[] files = Directory.GetFiles(dir);
                 foreach (string file in files)
                 {
@@ -95,7 +99,6 @@ public class ArcCommand : Command
             {
                 arcBytes = Compression.Compress(arcBytes);
             }
-            
             File.WriteAllBytes(_output, arcBytes);
         }
         else if (_dumpCsv)
