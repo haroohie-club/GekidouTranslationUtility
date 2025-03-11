@@ -54,7 +54,6 @@ public class GekidouArc
         
         short nameOffset = 1;
         
-        
         foreach (GekidouArcEntry entry in Entries.Skip(1))
         {
             bytes.AddRange(IO.GetShortBytes((short)(entry.IsDirectory ? 0x100 : 0)));   //1 if its a directory, 0 if not
@@ -92,7 +91,6 @@ public class GekidouArc
             }
             
         }
-        
         foreach (GekidouArcEntry entry in Entries)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes(entry.Name));    //add the name of the file
@@ -145,7 +143,6 @@ public class GekidouArcEntry
         if (!IsDirectory)
         {
             Data = data[OffsetOrDepth..(OffsetOrDepth + LengthOrLastItemIdx)];
-            
         }
     }
 }
