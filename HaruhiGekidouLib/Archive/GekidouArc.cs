@@ -36,6 +36,7 @@ public class GekidouArc
     {
         List<byte> bytes = [];
         SortedDictionary<int,byte[]> data = [];
+        int totalDataLength = 0;
         int fileTableLength = Entries.Count * 0x0C + Entries.Sum(e => e.Name.Length + 1);
         //fileTableLength += (fileTableLength % 2 == 0 ? 0 : 1);    
         int firstFileOffset = 0x20 + fileTableLength + (0x20 - fileTableLength % 0x20);
@@ -73,7 +74,13 @@ public class GekidouArc
                 }
                 else
                 {
-                    fileOffset = firstFileOffset + data.Count;
+                    fileOffset = firstFileOffset + totalDataLength;
+                    totalDataLength += entry.Data.Length;
+
+                    if (totalDataLength % 0x20 != 0)
+                    {
+                        totalDataLength += 0x20 - totalDataLength % 0x20;
+                    }
                 }
                 
                 bytes.AddRange(IO.GetIntBytes(fileOffset));    //set the offset value
@@ -81,7 +88,6 @@ public class GekidouArc
                 bytes.AddRange(IO.GetIntBytes(entry.Data.Length)); //length of entry
                 
                 data.Add(fileOffset, entry.Data);
-                
                 
             }
             

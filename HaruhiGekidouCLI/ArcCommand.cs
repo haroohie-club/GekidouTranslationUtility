@@ -73,25 +73,33 @@ public class ArcCommand : Command
         {
             GekidouArc arc = new();
             List<string> directories = [];
-            directories.AddRange(Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray());
             directories.Add(_input);
+            directories.AddRange(Directory.GetDirectories(_input, "*", SearchOption.AllDirectories).Order().ToArray());
             
             arc.Entries.Add(new(string.Empty, true, depth: 0));
+            
             foreach (string dir in directories)
             {
+                
                 int actualDepth = Path.GetRelativePath(_input, dir).Split(Path.DirectorySeparatorChar).Length;
+                if (!dir.Equals(_input)) //solves a bug where the depth is one off for everything but the root
+                {
+                    actualDepth++;
+                }
                 int depth = 0xFF >> (9 - actualDepth);
                 int lastItemIdx = 1 + actualDepth + Directory.GetFileSystemEntries(dir, "*", SearchOption.AllDirectories).Length
-                    + (arc.Entries.LastOrDefault(e => e.OffsetOrDepth == depth)?.LengthOrLastItemIdx ?? 0);
+                                  + (arc.Entries.LastOrDefault(e => e.OffsetOrDepth == depth)?.LengthOrLastItemIdx ?? 0);   //potential issue here: tutorial_000 is incorrect at AdvPartScript
+  
                 
                 arc.Entries.Add(new(Path.GetFileName(dir), true, depth, lastItemIdx));
-
+                
                 string[] files = Directory.GetFiles(dir);
                 foreach (string file in files)
                 {
                     arc.Entries.Add(new(Path.GetFileName(file), false, data: File.ReadAllBytes(file)));
                 }
             }
+            
 
             byte[] arcBytes = arc.GetBytes();
             if (_output.EndsWith(".lz77"))
