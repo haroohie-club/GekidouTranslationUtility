@@ -166,7 +166,7 @@ public class AdvPartScriptBlock
     {
         for (int i = 0; i < data.Length;)
         {
-            string invocationString = IO.ReadShiftJisString(data, i);
+            string invocationString = IO.ReadShiftJisString(data, i); //issue potentially here - some commands aren't being read correctly
             Commands.Add(new(invocationString));
             i += invocationString.GetShiftJisLength() + 1;
         }
@@ -176,7 +176,7 @@ public class AdvPartScriptBlock
     {
         List<byte> bytes = [.. Commands.SelectMany(c => c.GetBytes())];
         
-        bytes.InsertRange(0, IO.GetIntBytes(bytes.Count));
+        bytes.InsertRange(0, IO.GetIntBytes(bytes.Count)); //issue located in AdvPart_Scene_001 - count is 10 under
         
         return [.. bytes];
     }
