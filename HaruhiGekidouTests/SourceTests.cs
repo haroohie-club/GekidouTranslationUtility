@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -47,7 +49,43 @@ namespace HaruhiGekidouTests.Tests
 
         public static string[] _AdvPartScriptFiles()
         {
-            return Directory.GetFiles("./input/AdvPartScript/");
+            if (Directory.Exists("./input/AdvPartScript/"))
+            {
+                return Directory.GetFiles("./input/AdvPartScript/");
+            }
+            else
+            {
+                Directory.CreateDirectory("./input/AdvPartScript/");
+
+                List<string> newScripts = new List<string>();
+                string [] arcs = Directory.GetFiles("./input/ScriptArc/");
+                foreach (string arc in arcs)
+                {
+                    if (_scriptArcNames.Contains(Path.GetFileNameWithoutExtension(arc)))
+                    {
+                        byte[] arcBytes = File.ReadAllBytes(arc);
+                        GekidouArc newArc = new(arcBytes);
+                        
+                        bool isInScript = false;
+                        foreach (GekidouArcEntry entry in newArc.Entries)
+                        {
+                            if (entry.IsDirectory)
+                            {
+                                isInScript = entry.Name == "AdvPartScript";
+                            }
+                            else
+                            {
+                                if (!isInScript) continue;
+                               
+                                File.WriteAllBytes(Path.Combine("./input/AdvPartScript/", entry.Name), entry.Data);
+                                newScripts.Add(Path.Combine("./input/AdvPartScript/", entry.Name));
+                            }
+                        }
+
+                    }
+                }
+                return newScripts.ToArray();
+            }
         }
 
 
