@@ -76,9 +76,14 @@ namespace HaruhiGekidouTests.Tests
                             else
                             {
                                 if (!isInScript) continue;
-                               
-                                File.WriteAllBytes(Path.Combine("./input/AdvPartScript/", entry.Name), entry.Data);
-                                newScripts.Add(Path.Combine("./input/AdvPartScript/", entry.Name));
+                                string name = Path.GetFileNameWithoutExtension(entry.Name);
+                                if (arc.Contains("Tutorial"))
+                                {
+                                    name += arc.Split("_")[1];
+                                    
+                                }
+                                File.WriteAllBytes(Path.Combine("./input/AdvPartScript/", name + ".bin"), entry.Data);
+                                newScripts.Add(Path.Combine("./input/AdvPartScript/", name + ".bin"));
                             }
                         }
 
