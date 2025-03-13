@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -44,6 +45,11 @@ namespace HaruhiGekidouTests.Tests
             "Tutorial_006"
         ];
 
+        public static string[] _AdvPartScriptFiles()
+        {
+            return Directory.GetFiles("./input/AdvPartScript/");
+        }
+
 
         [Test]
         [TestCaseSource(nameof(_scriptArcNames))]
@@ -69,17 +75,22 @@ namespace HaruhiGekidouTests.Tests
         
         
 
-//        testing AdvScript files - unfinished right now
-//        [Test]
-//        [Parallelizable(ParallelScope.All)]
-//        public void validateScript(byte[] script)
-//        {
-//            //create new script based on input
-//            AdvPartScript Newscript = new("TestScript", script);
-//            byte[] newScriptBytes = Newscript.GetBytes();
-//
-//            //compare
-//           ClassicAssert.AreEqual(script, newScriptBytes);
-//        }
+        [Test]
+        [TestCaseSource(nameof(_AdvPartScriptFiles))]
+        [Parallelizable(ParallelScope.All)]
+        public void validateScript(string scriptPath)
+        {
+            
+            byte[] scriptBytes = File.ReadAllBytes(scriptPath);
+
+            AdvPartScript newScript = new("TestScript", scriptBytes);
+            byte[] newScriptBytes = newScript.GetBytes();
+            
+            //save them out
+            Directory.CreateDirectory("./output/AdvPartScript/");
+            File.WriteAllBytes("./output/AdvPartScript/" + Path.GetFileName(scriptPath), newScriptBytes);
+            //compare
+            Assert.That(newScriptBytes, Is.EqualTo(scriptBytes));
+        }
     }
 }
