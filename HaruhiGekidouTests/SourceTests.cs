@@ -82,8 +82,8 @@ namespace HaruhiGekidouTests.Tests
                                     name += arc.Split("_")[1];
                                     
                                 }
-                                File.WriteAllBytes(Path.Combine(Path.Combine("input", "AdvPartScript"), name + ".bin"), entry.Data);
-                                newScripts.Add(Path.Combine(Path.Combine("input", "AdvPartScript"), name + ".bin"));
+                                File.WriteAllBytes(Path.Combine("input", "AdvPartScript", name + ".bin"), entry.Data);
+                                newScripts.Add(Path.Combine("input", "AdvPartScript", name + ".bin"));
                             }
                         }
 
