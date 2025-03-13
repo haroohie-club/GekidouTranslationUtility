@@ -56,12 +56,14 @@ public partial class AdvPartScript
 
         List<byte[]> scriptBlockBytes = [.. ScriptBlocks.Select(b => b.GetBytes())];
         
-        bytes.AddRange(IO.GetIntBytes(1));
+        bytes.AddRange(IO.GetIntBytes(ScriptBlocks.Count));
         int startLocation = 0x104;
         foreach (byte[] data in scriptBlockBytes)
         {
             bytes.AddRange(IO.GetIntBytes(startLocation));
-            startLocation += data.Length + 4;
+            startLocation += data.Length + (0x20 - (startLocation+data.Length) % 0x20);
+                             
+                             //((data.Length+0x104) % 0x20);
         }
         for (int i = 0; i < 64 - ScriptBlocks.Count; i++)
         {
@@ -71,7 +73,13 @@ public partial class AdvPartScript
         foreach (byte[] data in scriptBlockBytes)
         {
             bytes.AddRange(data);
+            if (bytes.Count % 0x20 != 0)
+            {
+                bytes.AddRange(new byte[0x20 - bytes.Count() % 0x20]);
+            }
         }
+        
+
         
         return [.. bytes];
     }
@@ -158,7 +166,7 @@ public class AdvPartScriptBlock
     {
         for (int i = 0; i < data.Length;)
         {
-            string invocationString = IO.ReadShiftJisString(data, i);
+            string invocationString = IO.ReadShiftJisString(data, i); //issue potentially here - some commands aren't being read correctly
             Commands.Add(new(invocationString));
             i += invocationString.GetShiftJisLength() + 1;
         }
@@ -168,7 +176,7 @@ public class AdvPartScriptBlock
     {
         List<byte> bytes = [.. Commands.SelectMany(c => c.GetBytes())];
         
-        bytes.InsertRange(0, IO.GetIntBytes(bytes.Count));
+        bytes.InsertRange(0, IO.GetIntBytes(bytes.Count)); //issue located in AdvPart_Scene_001 - count is 10 under
         
         return [.. bytes];
     }

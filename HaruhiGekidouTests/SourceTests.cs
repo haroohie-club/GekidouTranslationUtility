@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -44,6 +47,52 @@ namespace HaruhiGekidouTests.Tests
             "Tutorial_006"
         ];
 
+        public static string[] AdvPartScriptFiles()
+        {
+            if (Directory.Exists(Path.Combine("input", "AdvPartScript")))
+            {
+                return Directory.GetFiles(Path.Combine("input", "AdvPartScript"));
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.Combine("input", "AdvPartScript"));
+
+                List<string> newScripts = new List<string>();
+                string [] arcs = Directory.GetFiles(Path.Combine("input", "ScriptArc"));
+                foreach (string arc in arcs)
+                {
+                    if (_scriptArcNames.Contains(Path.GetFileNameWithoutExtension(arc)))
+                    {
+                        byte[] arcBytes = File.ReadAllBytes(arc);
+                        GekidouArc newArc = new(arcBytes);
+                        
+                        bool isInScript = false;
+                        foreach (GekidouArcEntry entry in newArc.Entries)
+                        {
+                            if (entry.IsDirectory)
+                            {
+                                isInScript = entry.Name == "AdvPartScript";
+                            }
+                            else
+                            {
+                                if (!isInScript) continue;
+                                string name = Path.GetFileNameWithoutExtension(entry.Name);
+                                if (arc.Contains("Tutorial"))
+                                {
+                                    name += arc.Split("_")[1];
+                                    
+                                }
+                                File.WriteAllBytes(Path.Combine("input", "AdvPartScript", name + ".bin"), entry.Data);
+                                newScripts.Add(Path.Combine("input", "AdvPartScript", name + ".bin"));
+                            }
+                        }
+
+                    }
+                }
+                return newScripts.ToArray();
+            }
+        }
+
 
         [Test]
         [TestCaseSource(nameof(_scriptArcNames))]
@@ -69,17 +118,22 @@ namespace HaruhiGekidouTests.Tests
         
         
 
-//        testing AdvScript files - unfinished right now
-//        [Test]
-//        [Parallelizable(ParallelScope.All)]
-//        public void validateScript(byte[] script)
-//        {
-//            //create new script based on input
-//            AdvPartScript Newscript = new("TestScript", script);
-//            byte[] newScriptBytes = Newscript.GetBytes();
-//
-//            //compare
-//           ClassicAssert.AreEqual(script, newScriptBytes);
-//        }
+        [Test]
+        [TestCaseSource(nameof(AdvPartScriptFiles))]
+        [Parallelizable(ParallelScope.All)]
+        public void validateScript(string scriptPath)
+        {
+            
+            byte[] scriptBytes = File.ReadAllBytes(scriptPath);
+
+            AdvPartScript newScript = new("TestScript", scriptBytes);
+            byte[] newScriptBytes = newScript.GetBytes();
+            
+            //save them out
+            Directory.CreateDirectory("./output/AdvPartScript/");
+            File.WriteAllBytes("./output/AdvPartScript/" + Path.GetFileName(scriptPath), newScriptBytes);
+            //compare
+            Assert.That(newScriptBytes, Is.EqualTo(scriptBytes));
+        }
     }
 }
