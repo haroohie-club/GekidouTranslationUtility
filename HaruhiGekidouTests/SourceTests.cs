@@ -47,18 +47,18 @@ namespace HaruhiGekidouTests.Tests
             "Tutorial_006"
         ];
 
-        public static string[] _AdvPartScriptFiles()
+        public static string[] AdvPartScriptFiles()
         {
-            if (Directory.Exists("./input/AdvPartScript/"))
+            if (Directory.Exists(Path.Combine("input", "AdvPartScript")))
             {
-                return Directory.GetFiles("./input/AdvPartScript/");
+                return Directory.GetFiles(Path.Combine("input", "AdvPartScript"));
             }
             else
             {
-                Directory.CreateDirectory("./input/AdvPartScript/");
+                Directory.CreateDirectory(Path.Combine("input", "AdvPartScript"));
 
                 List<string> newScripts = new List<string>();
-                string [] arcs = Directory.GetFiles("./input/ScriptArc/");
+                string [] arcs = Directory.GetFiles(Path.Combine("input", "ScriptArc"));
                 foreach (string arc in arcs)
                 {
                     if (_scriptArcNames.Contains(Path.GetFileNameWithoutExtension(arc)))
@@ -82,8 +82,8 @@ namespace HaruhiGekidouTests.Tests
                                     name += arc.Split("_")[1];
                                     
                                 }
-                                File.WriteAllBytes(Path.Combine("./input/AdvPartScript/", name + ".bin"), entry.Data);
-                                newScripts.Add(Path.Combine("./input/AdvPartScript/", name + ".bin"));
+                                File.WriteAllBytes(Path.Combine(Path.Combine("input", "AdvPartScript"), name + ".bin"), entry.Data);
+                                newScripts.Add(Path.Combine(Path.Combine("input", "AdvPartScript"), name + ".bin"));
                             }
                         }
 
@@ -119,7 +119,7 @@ namespace HaruhiGekidouTests.Tests
         
 
         [Test]
-        [TestCaseSource(nameof(_AdvPartScriptFiles))]
+        [TestCaseSource(nameof(AdvPartScriptFiles))]
         [Parallelizable(ParallelScope.All)]
         public void validateScript(string scriptPath)
         {
